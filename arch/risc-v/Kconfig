@@ -31,6 +31,13 @@ config ARCH_CHIP_LITEX
 	---help---
 		Enjoy Digital LITEX VEXRISCV softcore processor (RV32IMA).
 
+config ARCH_CHIP_IBEX
+    bool "IBEX SOC TEST PORT"
+    select ARCH_RV32IM
+    ---help---
+    	TEST IBEX SOC PORT
+
+
 config ARCH_CHIP_BL602
 	bool "BouffaloLab BL602"
 	select ARCH_RV32IM
@@ -94,6 +101,7 @@ config ARCH_CHIP
 	default "fe310"		if ARCH_CHIP_FE310
 	default "k210"		if ARCH_CHIP_K210
 	default "litex"		if ARCH_CHIP_LITEX
+	default "ibex"		if ARCH_CHIP_IBEX
 	default "bl602"		if ARCH_CHIP_BL602
 	default "esp32c3"	if ARCH_CHIP_ESP32C3
 	default "c906"		if ARCH_CHIP_C906
@@ -112,6 +120,9 @@ source arch/risc-v/src/k210/Kconfig
 endif
 if ARCH_CHIP_LITEX
 source arch/risc-v/src/litex/Kconfig
+endif
+if ARCH_CHIP_IBEX
+source arch/risc-v/src/ibex/Kconfig
 endif
 if ARCH_CHIP_BL602
 source arch/risc-v/src/bl602/Kconfig
