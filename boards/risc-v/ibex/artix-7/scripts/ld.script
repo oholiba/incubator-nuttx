@@ -1,0 +1,83 @@
+/* MEMORY
+{
+  progmem (rx) : ORIGIN = 0x00000000, LENGTH = 8M
+  sram (rwx) : ORIGIN = 0x40800000, LENGTH = 256M - 8M
+} */
+
+MEMORY
+{
+    boot : ORIGIN = 0x00000000, LENGTH = 0x00002000 /*   8 kB */
+    ram  : ORIGIN = 0x00002000, LENGTH = 0x0003E000 /* 248 kB */
+}
+
+OUTPUT_ARCH("riscv")
+
+ENTRY(_stext)
+EXTERN(_vectors)
+SECTIONS
+{
+
+    vectors 0 : {
+        *(.vectors)
+    } > boot
+
+    .text : {
+        _stext = ABSOLUTE(.);
+        *(.text .text.*)
+        *(.fixup)
+        *(.gnu.warning)
+        *(.rodata .rodata.* .srodata .srodata.*)
+        *(.gnu.linkonce.t.*)
+        *(.glue_7)
+        *(.glue_7t)
+        *(.got)
+        *(.gcc_except_table)
+        *(.gnu.linkonce.r.*)
+        _etext = ABSOLUTE(.);
+    } > ram
+
+    .init_section : ALIGN(4) {
+        _sinit = ABSOLUTE(.);
+        KEEP(*(.init_array .init_array.*))
+        _einit = ABSOLUTE(.);
+    } > ram
+
+    _eronly = ABSOLUTE(.);
+
+    .data : ALIGN(4) {
+        _sdata = ABSOLUTE(.);
+        *(.data .data.*)
+        *(.sdata .sdata.* .sdata2.*)
+        *(.gnu.linkonce.d.*)
+        *(.gnu.linkonce.s.*)
+        CONSTRUCTORS
+        . = ALIGN(4);
+        _edata = ABSOLUTE(.);
+    } > ram
+
+    .bss : ALIGN(4) {
+        _sbss = ABSOLUTE(.);
+        *(.bss .bss.*)
+        *(.sbss .sbss.*)
+        *(.gnu.linkonce.b.*)
+        *(.gnu.linkonce.sb.*)
+        *(COMMON)
+        . = ALIGN(4);
+        _ebss = ABSOLUTE(.);
+    } > ram
+
+    /* Stabs debugging sections. */
+
+    .stab 0 : { *(.stab) }
+    .stabstr 0 : { *(.stabstr) }
+    .stab.excl 0 : { *(.stab.excl) }
+    .stab.exclstr 0 : { *(.stab.exclstr) }
+    .stab.index 0 : { *(.stab.index) }
+    .stab.indexstr 0 : { *(.stab.indexstr) }
+    .comment 0 : { *(.comment) }
+    .debug_abbrev 0 : { *(.debug_abbrev) }
+    .debug_info 0 : { *(.debug_info) }
+    .debug_line 0 : { *(.debug_line) }
+    .debug_pubnames 0 : { *(.debug_pubnames) }
+    .debug_aranges 0 : { *(.debug_aranges) }
+}
