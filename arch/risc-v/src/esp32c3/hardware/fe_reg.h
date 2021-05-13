@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/pwd.h
+ * arch/risc-v/src/esp32c3/hardware/fe_reg.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,64 +18,33 @@
  *
  ****************************************************************************/
 
-#ifndef __INCLUDE_PWD_H
-#define __INCLUDE_PWD_H
+#ifndef __ARCH_RISCV_SRC_ESP32C3_HARDWARE_FE_REG_H_
+#define __ARCH_RISCV_SRC_ESP32C3_HARDWARE_FE_REG_H_
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-#include <nuttx/compiler.h>
-
-#include <sys/types.h>
+#include "esp32c3_soc.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifdef CONFIG_LIBC_PASSWD_LINESIZE
-# define NSS_BUFLEN_PASSWD CONFIG_LIBC_PASSWD_LINESIZE
-#else
-# define NSS_BUFLEN_PASSWD 256
-#endif
+/* Some of the RF frontend control registers.
+ * PU/PD fields defined here are used in sleep related functions.
+ */
 
-/****************************************************************************
- * Public Type Definitions
- ****************************************************************************/
+#define FE_GEN_CTRL           (DR_REG_FE_BASE + 0x0090)
+#define FE_IQ_EST_FORCE_PU    (BIT(5))
+#define FE_IQ_EST_FORCE_PU_M  (BIT(5))
+#define FE_IQ_EST_FORCE_PU_V  1
+#define FE_IQ_EST_FORCE_PU_S  5
 
-struct passwd
-{
-  FAR char *pw_name;
-  uid_t     pw_uid;
-  gid_t     pw_gid;
-  FAR char *pw_dir;
-  FAR char *pw_shell;
-};
+#define FE2_TX_INTERP_CTRL    (DR_REG_FE2_BASE + 0x00f0)
+#define FE2_TX_INF_FORCE_PU   (BIT(10))
+#define FE2_TX_INF_FORCE_PU_M (BIT(10))
+#define FE2_TX_INF_FORCE_PU_V 1
+#define FE2_TX_INF_FORCE_PU_S 10
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-
-#undef EXTERN
-#if defined(__cplusplus)
-#define EXTERN extern "C"
-extern "C"
-{
-#else
-#define EXTERN extern
-#endif
-
-FAR struct passwd *getpwnam(FAR const char *name);
-FAR struct passwd *getpwuid(uid_t uid);
-int getpwnam_r(FAR const char *name, FAR struct passwd *pwd, FAR char *buf,
-               size_t buflen, FAR struct passwd **result);
-int getpwuid_r(uid_t uid, FAR struct passwd *pwd, FAR char *buf,
-               size_t buflen, FAR struct passwd **result);
-
-#undef EXTERN
-#if defined(__cplusplus)
-}
-#endif
-
-#endif /* __INCLUDE_PWD_H */
+#endif /* __ARCH_RISCV_SRC_ESP32C3_HARDWARE_FE_REG_H_ */

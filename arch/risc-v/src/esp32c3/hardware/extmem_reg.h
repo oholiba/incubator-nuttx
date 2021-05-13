@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/pwd.h
+ * arch/risc-v/src/esp32c3/hardware/extmem_reg.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,64 +18,40 @@
  *
  ****************************************************************************/
 
-#ifndef __INCLUDE_PWD_H
-#define __INCLUDE_PWD_H
+#ifndef __ARCH_RISCV_SRC_ESP32C3_HARDWARE_EXTMEM_REG_H_
+#define __ARCH_RISCV_SRC_ESP32C3_HARDWARE_EXTMEM_REG_H_
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-#include <nuttx/compiler.h>
-
-#include <sys/types.h>
+#include "esp32c3_soc.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifdef CONFIG_LIBC_PASSWD_LINESIZE
-# define NSS_BUFLEN_PASSWD CONFIG_LIBC_PASSWD_LINESIZE
-#else
-# define NSS_BUFLEN_PASSWD 256
-#endif
+#define EXTMEM_CACHE_MMU_POWER_CTRL_REG     (DR_REG_EXTMEM_BASE + 0x0AC)
+#define EXTMEM_ICACHE_TAG_POWER_CTRL_REG    (DR_REG_EXTMEM_BASE + 0x008)
 
-/****************************************************************************
- * Public Type Definitions
- ****************************************************************************/
+/* EXTMEM_CACHE_MMU_MEM_FORCE_ON : R/W ;bitpos:[0] ;default: 1'b1.
+ * The bit is used to enable clock gating to save
+ * power when access mmu memory  0: enable  1: disable
+ */
 
-struct passwd
-{
-  FAR char *pw_name;
-  uid_t     pw_uid;
-  gid_t     pw_gid;
-  FAR char *pw_dir;
-  FAR char *pw_shell;
-};
+#define EXTMEM_CACHE_MMU_MEM_FORCE_ON    (BIT(0))
+#define EXTMEM_CACHE_MMU_MEM_FORCE_ON_M  (BIT(0))
+#define EXTMEM_CACHE_MMU_MEM_FORCE_ON_V  0x1
+#define EXTMEM_CACHE_MMU_MEM_FORCE_ON_S  0
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+/* EXTMEM_ICACHE_TAG_MEM_FORCE_ON : R/W ;bitpos:[0] ;default: 1'b1.
+ * description: The bit is used to close clock gating of  icache tag memory.
+ * 1: close gating  0: open clock gating.
+ */
 
-#undef EXTERN
-#if defined(__cplusplus)
-#define EXTERN extern "C"
-extern "C"
-{
-#else
-#define EXTERN extern
-#endif
+#define EXTMEM_ICACHE_TAG_MEM_FORCE_ON    (BIT(0))
+#define EXTMEM_ICACHE_TAG_MEM_FORCE_ON_M  (BIT(0))
+#define EXTMEM_ICACHE_TAG_MEM_FORCE_ON_V  0x1
+#define EXTMEM_ICACHE_TAG_MEM_FORCE_ON_S  0
 
-FAR struct passwd *getpwnam(FAR const char *name);
-FAR struct passwd *getpwuid(uid_t uid);
-int getpwnam_r(FAR const char *name, FAR struct passwd *pwd, FAR char *buf,
-               size_t buflen, FAR struct passwd **result);
-int getpwuid_r(uid_t uid, FAR struct passwd *pwd, FAR char *buf,
-               size_t buflen, FAR struct passwd **result);
-
-#undef EXTERN
-#if defined(__cplusplus)
-}
-#endif
-
-#endif /* __INCLUDE_PWD_H */
+#endif /* __ARCH_RISCV_SRC_ESP32C3_HARDWARE_EXTMEM_REG_H_ */

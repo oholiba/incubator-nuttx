@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/nuttx/lib/getopt.h
+ * arch/risc-v/src/esp32c3/esp32c3_pminitialize.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,58 +18,38 @@
  *
  ****************************************************************************/
 
-#ifndef __INCLUDE_NUTTX_LIB_GETOPT_H
-#define __INCLUDE_NUTTX_LIB_GETOPT_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <nuttx/power/pm.h>
 
-#include <stdbool.h>
+#include "esp32c3_pm.h"
+
+#ifdef CONFIG_PM
 
 /****************************************************************************
- * Public Types
+ * Public Functions
  ****************************************************************************/
 
-/* This structure encapsulates all variables associated with getopt(). */
+/****************************************************************************
+ * Name: xtensa_pminitialize
+ *
+ * Description:
+ *   Initialize the power management subsystem.
+ *
+ ****************************************************************************/
 
-struct getopt_s
+void riscv_pminitialize(void)
 {
-  /* Part of the implementation of the public getopt() interface */
+  /* Initialize RTC parameters */
 
-  FAR char *go_optarg;       /* Optional argument following option */
-  int       go_opterr;       /* Print error message */
-  int       go_optind;       /* Index into argv */
-  int       go_optopt;       /* unrecognized option character */
+  esp32c3_pminit();
 
-  /* Internal getopt() state */
+  /* Then initialize the NuttX power management subsystem proper */
 
-  FAR char *go_optptr;       /* Current parsing location */
-  bool      go_binitialized; /* true:  getopt() has been initialized */
-};
-
-/****************************************************************************
- * Public Data
- ****************************************************************************/
-
-#undef EXTERN
-#if defined(__cplusplus)
-#define EXTERN extern "C"
-extern "C"
-{
-#else
-#define EXTERN extern
-#endif
-
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-
-#undef EXTERN
-#if defined(__cplusplus)
+  pm_initialize();
 }
-#endif
 
-#endif /* __INCLUDE_NUTTX_LIB_GETOPT_H */
+#endif /* CONFIG_PM */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/nuttx/lib/getopt.h
+ * include/pty.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,40 +18,23 @@
  *
  ****************************************************************************/
 
-#ifndef __INCLUDE_NUTTX_LIB_GETOPT_H
-#define __INCLUDE_NUTTX_LIB_GETOPT_H
+#ifndef __INCLUDE_PTY_H
+#define __INCLUDE_PTY_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <nuttx/compiler.h>
 
-#include <stdbool.h>
+#include <termios.h>
+#include <sys/ioctl.h>
 
-/****************************************************************************
- * Public Types
- ****************************************************************************/
-
-/* This structure encapsulates all variables associated with getopt(). */
-
-struct getopt_s
-{
-  /* Part of the implementation of the public getopt() interface */
-
-  FAR char *go_optarg;       /* Optional argument following option */
-  int       go_opterr;       /* Print error message */
-  int       go_optind;       /* Index into argv */
-  int       go_optopt;       /* unrecognized option character */
-
-  /* Internal getopt() state */
-
-  FAR char *go_optptr;       /* Current parsing location */
-  bool      go_binitialized; /* true:  getopt() has been initialized */
-};
+#if defined(CONFIG_SERIAL_TERMIOS) && defined(CONFIG_PSEUDOTERM)
 
 /****************************************************************************
- * Public Data
+ * Public Function Prototypes
  ****************************************************************************/
 
 #undef EXTERN
@@ -64,12 +47,17 @@ extern "C"
 #endif
 
 /****************************************************************************
- * Public Function Prototypes
+ * Create pseudo tty pair with name and set terminal attributes according
+ * to term and win and return handles for both ends in master and slave.
  ****************************************************************************/
+
+int openpty(FAR int *master, FAR int *slave, FAR char *name,
+            FAR const struct termios *term, FAR const struct winsize *win);
 
 #undef EXTERN
 #if defined(__cplusplus)
 }
 #endif
 
-#endif /* __INCLUDE_NUTTX_LIB_GETOPT_H */
+#endif /* CONFIG_SERIAL_TERMIOS && CONFIG_PSEUDOTERM */
+#endif /* __INCLUDE_PTY_H */
