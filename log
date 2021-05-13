@@ -1,0 +1,56 @@
+- added dir in boards/riscv (start with porting guide folder structure)
+- added dir in arch/risc-v/include
+- added dir in arch/risc-v/src
+- initial approach: copy files from litex and replace "litex" with "ibex"
+- updated Kconfig files to include ibex (arch and boards)
+- toolchain defined in arch/risc-v/src/rv32im/Toolchain.defs
+
+- litex memory starts at 0x40000000 -> change origin to 0x00000000, reduce to one memory region of 256 kb for now
+
+- problem: core starts with pc at 0x80 ("The core starts fetching at the address made by concatenating the most significant 3 bytes of the boot address and the reset value (0x80) as the least significant byte")
+-> linker: create own vector segment;
+
+- problem: at sim time 470us core jumps to exception (instraddr before: 0x00002410, already in ibex low setup) 
+-> probable solution: put correct base address for uart, timer,... in hardware/ibex_memorymap.h (which registers are needed?)
+-> ibex_lowsetup was removed (does uart need initialization?)
+- problem: what is necessary in ibex_serial.c? (porting guide: up_putc() is mandatory)
+-> temporary solution: disable all private serial functions, just provide up_putc()
+- problem: UART is sending continuously data -> exception raised in mm (616.8us) -> up_irq_restore (615.6u)s
+- in ibex_start: remove copying from flash to sram (at this moment there is no difference between memory)
+- bss gets cleared until 450.8us
+- observation: A,B and C get sent succesfully via UART
+- observation: "irq" gets sent via UART -> irq is raised in nx_start.c (memset in line 421?)
+- on time 643.015us: nx_start gets called
+- on time 646.550us: memset gets called (line 421 in nx_start.c), returns at 701.090us
+//- mm_initialize (address 0x4970) -> memset (address 0x4668) -> mm_seminitialize (0x49c8) ret -> sem_init (0x4504) ret
+- mm_addregion raises exception
+- data_err flag raised -> heap gets set wrong? (up_allocate_heap in riscv_allocateheap uses g_idle_topstack)(IBEX_IDLESTACK_TOP)
+-> heap starts at ebss and continues to end of memory (ibex_memorymap.h)
+-> try to set config variable RAM_SIZE to 256000 and RAM_START to 0
+= data_err gone
+- observation: irq_initialize raises exception
+
+? https://ibex-core.readthedocs.io/en/latest/03_reference/exception_interrupts.html#exceptions-interrupts
+why reset value 0x80
+? why is up_irqinitialize not in porting guide
+- log: in irq.h implement supported exceptions and interrupts (why interrupts +16?, how implement external interrupts?))
+
+- irq_initialize: use comments of litex as guide
+-- try to enable and disable interrupts
+-- up_irq_enable needed by riscv_sigdeliver.c
+
+- timer: update ibex_timerisr.c
+
+- observation: ibex_dispatch_irq causes exception -> remove litex specific stuff
+- observation: exception by up_unblock_task -> called by code (ecall)
+
+- observation: timer interrupt -> in irq_dispatch: timer isr is not called (instead irq_unexpected_isr
+-> if ((unsigned)irq < NR_IRQS) results to false) => try to output irq on UART : irq = 46?
+
+-- change irq logic: in ibex mcause 5 bits get used to store code, interrupt bit gets shifted to position 5 in handling code
+
+-> problem: system makes ecall, interrupts goes into unexpected_isr (time: 2494.94us)
+-> go back to litex code -> ecall works as expected
+-> now ecall and timer interrupt works (heisenbug)
+
+-> problem: after processing timer interrupt, core jumps straight into trap vector again (forgot to set bit accordingly?)
