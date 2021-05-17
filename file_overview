@@ -1,0 +1,49 @@
+boards/
+	Kconfig: left litex empty
+	scripts/
+		Make.defs: left litex
+		ld. script: modified memory regions, remove debug sections?
+	include/
+		board.h: left litex
+	src/
+		Makefile: left litex
+		artix-7.h: left litex
+		ibex_appinit.c: left litex
+		ibex_boot.c: left litex; should ibex_boardinitialize stay empty?
+		ibex_bringup.c: left litex; how does file sysyem mounting work?
+	configs/
+		defconfig: modified RAM_SIZE and RAM_START to match linker script
+arch:
+	Kconfig: included ibex board artix-7
+	include/
+		chip.h: left litex empty
+		irq.h: only declare listed interrupts and exceptions (in ibex docs); what to do with external interrupts?
+	src/
+		hardware/
+			ibex_clint.h: left litex; how does clint (core local interrupt) work?
+			ibex_memorymap.h: modified uart_base; what to do with cputimer and timer base?
+			ibex_plic.h: left litex; probably necessary to remove csr definitions; how does plic (platform level interrupt controller) work?
+			ibex_uart.h: modified offsets, taken from example project
+		Kconfig: left litex; uart config ok like this?
+		Make.defs: left litex
+		chip.h: left litex empty
+		ibex.h: left litex empty
+		ibex_allocateheap.c: left litex; why riscv_addregion empty?
+		ibex_clockconfig.c: left litex; are these two functions necessary (probably used by riscv code)?
+		ibex_clockconfig.h: see line above
+		ibex_config.h: left litex; probably useful to modify for only one single uart
+		ibex_head.S: left litex; how does g_instackalloc and g_intstack work?
+		ibex_idle.c: left litex; does WFI work?
+		ibex_irq.c: what does colorize stack do?; enable and disable irq: only one command enough?; other functions: necessary?, what to do with up_irq_enable?
+		ibex_irq_dispatch.c: modified calculation of irq of mcause; what to do with external interrupts? why adjust mepc? how does g_current_regs work?
+		ibex_lowputc.c: busy waiting -> better solution with interrupts? lowsetup left empty, necessary?
+		ibex_lowputc.h: left litex, just cplusplus code
+		ibex_memorymap.h: idlestack constants defined here; left litex
+		ibex_serial.c: left litex; a lot of empty functions -> what can be eliminated?
+		ibex_start.c: left litex; could probably made to fit ibex better; how to clear .bss?
+		ibex_timerisr.c: interrupt_flags hardcoded, where to set constants?
+		ibex_vectors.S: left litex; same concept as in example project
+
+
+--Notes:
+-Tracer useful for debugging?
