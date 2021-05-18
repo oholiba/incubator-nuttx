@@ -36,7 +36,6 @@
 #define IBEX_IRQ_MEXT     (IBEX_IRQ_ASYNC + 11) /* Machine External Int */
 
 /* Machine Global External Interrupt */
-
 #define IBEX_IRQ_UART0    (IBEX_IRQ_MEXT + 1)
 #define IBEX_IRQ_TIMER0   (IBEX_IRQ_MEXT + 2)
 

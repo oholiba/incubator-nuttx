@@ -27,8 +27,6 @@
 
 #include "hardware/ibex_memorymap.h"
 #include "hardware/ibex_uart.h"
-#include "hardware/ibex_clint.h"
-#include "hardware/ibex_plic.h"
 
 /****************************************************************************
  * Pre-processor Definitions

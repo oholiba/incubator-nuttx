@@ -54,3 +54,8 @@ why reset value 0x80
 -> now ecall and timer interrupt works (heisenbug)
 
 -> problem: after processing timer interrupt, core jumps straight into trap vector again (forgot to set bit accordingly?)
+--> solved: set interrupt ack bit
+
+- TODO?: in rv32im header registers and other constants are defined: use them in exception_wrapper and elsewhere?
+
+- removed file hardware/ibex_plic.h and hardware/ibex_clint.h
