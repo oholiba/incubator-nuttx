@@ -24,11 +24,8 @@
 static int ibex_timerisr(int irq, void *context, FAR void *arg)
 {
   // clear interrupt flag
-  // TODO: how set interrupt flags correctly?
-  volatile long *const interrupt_flags = (volatile long *const)0xFF000200;
-  *interrupt_flags = 1;/* Process timer interrupt */
-  
-  riscv_lowputc('A');
+  volatile long *const interrupt_flag = (volatile long *const)IBEX_TIMER0_BASE;
+  *interrupt_flag = 1;/* Process timer interrupt */
 
   nxsched_process_timer();
   return 0;
@@ -55,5 +52,5 @@ void up_timer_initialize(void)
 
   /* And enable the timer interrupt */
 
-  up_enable_irq(IBEX_IRQ_MTIMER);
+  up_enable_irq(IBEX_IRQ_MTIMER - IBEX_IRQ_ASYNC);
 }

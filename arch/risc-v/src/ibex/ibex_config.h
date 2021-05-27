@@ -35,19 +35,15 @@
  ****************************************************************************/
 
 #undef HAVE_UART_DEVICE
-#if defined(CONFIG_IBEX_UART0) || defined(CONFIG_IBEX_UART1)
+#if defined(CONFIG_IBEX_UART0)
 #  define HAVE_UART_DEVICE 1
 #endif
 
 #if defined(CONFIG_UART0_SERIAL_CONSOLE) && defined(CONFIG_IBEX_UART0)
 #  undef CONFIG_UART1_SERIAL_CONSOLE
 #  define HAVE_SERIAL_CONSOLE 1
-#elif defined(CONFIG_UART1_SERIAL_CONSOLE) && defined(CONFIG_IBEX_UART1)
-#  undef CONFIG_UART0_SERIAL_CONSOLE
-#  define HAVE_SERIAL_CONSOLE 1
 #else
 #  undef CONFIG_UART0_SERIAL_CONSOLE
-#  undef CONFIG_UART1_SERIAL_CONSOLE
 #  undef HAVE_SERIAL_CONSOLE
 #endif
 

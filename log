@@ -59,3 +59,24 @@ why reset value 0x80
 - TODO?: in rv32im header registers and other constants are defined: use them in exception_wrapper and elsewhere?
 
 - removed file hardware/ibex_plic.h and hardware/ibex_clint.h
+- removed uart1 from ibex_config.h file
+
+- updated memory mapped timer interrupt flag
+- remove uart output char from timerisr
+
+? nxsched_process_timer() should be called every CONFIG_USEC_PER_TICK -> used inside OS to calc system time
+
+--programm "screen"
+
+
+---uart driver---
+- driver needs function to check if uart available -> check interrupt bits
+- driver needs function to check if txready AND txempty -> at the moment means the same thing?
+
+- remove baud rate
+
+- enabled in menuconfig "enable standard upper-half serial driver" --> disabled again
+
+- try to run serial driver -> problem, that uart receive does not work (received chars are not shown in console)
+--> is stuck in uart_recvchars --> uart_rxavailable(dev) always results to true, so endless loop
+--> temporary solved by checking for interrupt pending

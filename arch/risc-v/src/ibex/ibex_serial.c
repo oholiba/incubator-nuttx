@@ -41,15 +41,6 @@
 #    define IBEX_CONSOLE_TX          GPIO_UART0_TX
 #    define IBEX_CONSOLE_RX          GPIO_UART0_RX
 #    define HAVE_UART
-#  elif defined(CONFIG_UART1_SERIAL_CONSOLE)
-#    define IBEX_CONSOLE_BASE        IBEX_UART1_BASE
-#    define IBEX_CONSOLE_BAUD        CONFIG_UART1_BAUD
-#    define IBEX_CONSOLE_BITS        CONFIG_UART1_BITS
-#    define IBEX_CONSOLE_PARITY      CONFIG_UART1_PARITY
-#    define IBEX_CONSOLE_2STOP       CONFIG_UART1_2STOP
-#    define IBEX_CONSOLE_TX          GPIO_UART1_TX
-#    define IBEX_CONSOLE_RX          GPIO_UART1_RX
-#    define HAVE_UART
 #  endif
 #endif /* HAVE_CONSOLE */
 
@@ -100,8 +91,8 @@
 struct up_dev_s
 {
   uintptr_t uartbase; /* Base address of UART registers */
-  uint32_t  baud;     /* Configured baud */
-  uint8_t   irq;      /* IRQ associated with this UART */
+  uint8_t   irq_RX;      /* RX IRQ associated with this UART */
+  uint8_t   irq_TX;      /* TX IRQ associated with this UART */
   uint8_t   im;       /* Interrupt mask state */
 };
 
@@ -166,8 +157,8 @@ static char g_uart0txbuffer[CONFIG_UART0_TXBUFSIZE];
 static struct up_dev_s g_uart0priv =
 {
   .uartbase  = IBEX_UART0_BASE,
-  .baud      = CONFIG_UART0_BAUD,
-  .irq       = IBEX_IRQ_UART0,
+  .irq_RX       = IBEX_IRQ_UART0_RX,
+  .irq_TX       = IBEX_IRQ_UART0_TX,
 };
 
 static uart_dev_t g_uart0port =
@@ -200,7 +191,7 @@ static uart_dev_t g_uart0port =
 
 static uint32_t up_serialin(struct up_dev_s *priv, int offset)
 {
-	return 0;
+	return getreg32(priv->uartbase + offset);
 }
 
 /****************************************************************************
@@ -209,6 +200,7 @@ static uint32_t up_serialin(struct up_dev_s *priv, int offset)
 
 static void up_serialout(struct up_dev_s *priv, int offset, uint32_t value)
 {
+	putreg32(value, priv->uartbase + offset);
 }
 
 /****************************************************************************
@@ -238,6 +230,7 @@ static void up_disableuartint(struct up_dev_s *priv, uint8_t *im)
 
 static int up_setup(struct uart_dev_s *dev)
 {
+	// UART can be configured from hdl code
 	return 0;
 }
 
@@ -252,6 +245,9 @@ static int up_setup(struct uart_dev_s *dev)
 
 static void up_shutdown(struct uart_dev_s *dev)
 {
+	// disable interrupts
+	up_rxint(dev, false);
+	up_txint(dev, false);
 }
 
 /****************************************************************************
@@ -271,6 +267,11 @@ static void up_shutdown(struct uart_dev_s *dev)
 
 static int up_attach(struct uart_dev_s *dev)
 {
+	struct up_dev_s *priv = (struct up_dev_s *)dev->priv;
+
+	irq_attach(priv->irq_RX, up_interrupt, dev);
+	irq_attach(priv->irq_TX, up_interrupt, dev);
+
 	return 0;
 }
 
@@ -286,6 +287,13 @@ static int up_attach(struct uart_dev_s *dev)
 
 static void up_detach(struct uart_dev_s *dev)
 {
+	struct up_dev_s *priv = (struct up_dev_s *)dev->priv;
+
+	up_disable_irq((priv->irq_RX) - IBEX_IRQ_ASYNC);
+	up_disable_irq((priv->irq_TX) - IBEX_IRQ_ASYNC);
+
+	irq_detach(priv->irq_RX);
+	irq_detach(priv->irq_TX);
 }
 
 /****************************************************************************
@@ -302,6 +310,51 @@ static void up_detach(struct uart_dev_s *dev)
 
 static int up_interrupt(int irq, void *context, FAR void *arg)
 {
+	struct uart_dev_s *dev = (struct uart_dev_s *)arg;
+	struct up_dev_s   *priv;
+	uint32_t           status;
+	int                passes;
+
+	DEBUGASSERT(dev != NULL && dev->priv != NULL);
+	priv = (struct up_dev_s *)dev->priv;
+
+	/* Loop until there are no characters to be transferred or,
+	 * until we have been looping for a long time.
+	 */
+
+	/*for (passes = 0; passes < 256; passes++)
+	{
+		 Retrieve interrupt pending status 
+		
+		asm volatile("csrr %0, mip" : "=r" (status):);
+
+		// RX interrupt
+		if ((status & (1 << 16))
+		{
+			uart_recvchars(dev);
+		}
+		else if ((status & (1 << 17)) // TX interrupt
+		{
+			uart_xmitchars(dev);
+		}
+		else
+		{
+			break;
+		}	
+	}*/
+
+	// RX interrupt
+	if (irq == IBEX_IRQ_UART0_RX)
+	{
+		uart_recvchars(dev);
+	}
+
+	// TX interrupt
+	if (irq == IBEX_IRQ_UART0_TX)
+	{
+		uart_xmitchars(dev);
+	}
+		
 	return 0;
 }
 
@@ -315,7 +368,7 @@ static int up_interrupt(int irq, void *context, FAR void *arg)
 
 static int up_ioctl(struct file *filep, int cmd, unsigned long arg)
 {
-	return 0;
+	return -ENOTTY;
 }
 
 /****************************************************************************
@@ -330,7 +383,11 @@ static int up_ioctl(struct file *filep, int cmd, unsigned long arg)
 
 static int up_receive(struct uart_dev_s *dev, unsigned int *status)
 {
-	return 0;
+	struct up_dev_s *priv = (struct up_dev_s *)dev->priv;
+
+	int rxdata = (int)up_serialin(priv, UART_DATA_OFFSET);
+	
+	return rxdata;
 }
 
 /****************************************************************************
@@ -343,6 +400,14 @@ static int up_receive(struct uart_dev_s *dev, unsigned int *status)
 
 static void up_rxint(struct uart_dev_s *dev, bool enable)
 {
+	if (enable)
+	{
+		up_enable_irq(IBEX_IRQ_UART0_RX - IBEX_IRQ_ASYNC);	
+	}
+	else
+	{
+		up_disable_irq(IBEX_IRQ_UART0_RX - IBEX_IRQ_ASYNC);	
+	}
 }
 
 /****************************************************************************
@@ -354,8 +419,27 @@ static void up_rxint(struct uart_dev_s *dev, bool enable)
  ****************************************************************************/
 
 static bool up_rxavailable(struct uart_dev_s *dev)
-{
-	return 0;
+{  
+	struct up_dev_s *priv = (struct up_dev_s *)dev->priv;
+	
+	// 1.
+	// problem: interrupt gets reset when uart data is read
+	// return (up_serialin(priv, UART_DATA_OFFSET) >= 0);
+	
+	// 2.
+	// problem: mip only works when interrupts is enabled
+	
+	uint32_t           status;
+
+	asm volatile("csrr %0, mip" : "=r" (status):);
+
+	// RX interrupt
+	if (status & (1 << 16))
+	{
+		return true;
+	}
+
+	return false;
 }
 
 /****************************************************************************
@@ -368,6 +452,8 @@ static bool up_rxavailable(struct uart_dev_s *dev)
 
 static void up_send(struct uart_dev_s *dev, int ch)
 {
+	struct up_dev_s *priv = (struct up_dev_s *)dev->priv;
+	up_serialout(priv, UART_DATA_OFFSET, (uint32_t)ch);
 }
 
 /****************************************************************************
@@ -380,6 +466,14 @@ static void up_send(struct uart_dev_s *dev, int ch)
 
 static void up_txint(struct uart_dev_s *dev, bool enable)
 {
+	if (enable)
+	{
+		up_enable_irq(IBEX_IRQ_UART0_TX - IBEX_IRQ_ASYNC);	
+	}
+	else
+	{
+		up_disable_irq(IBEX_IRQ_UART0_TX - IBEX_IRQ_ASYNC);	
+	}
 }
 
 /****************************************************************************
@@ -392,7 +486,9 @@ static void up_txint(struct uart_dev_s *dev, bool enable)
 
 static bool up_txready(struct uart_dev_s *dev)
 {
-	return 0;
+	struct up_dev_s *priv = (struct up_dev_s *)dev->priv;
+	
+	return (up_serialin(priv, UART_STATUS_OFFSET) == 0);
 }
 
 /****************************************************************************
@@ -405,7 +501,9 @@ static bool up_txready(struct uart_dev_s *dev)
 
 static bool up_txempty(struct uart_dev_s *dev)
 {
-	return 0;
+	struct up_dev_s *priv = (struct up_dev_s *)dev->priv;
+	
+	return (up_serialin(priv, UART_STATUS_OFFSET) == 0);
 }
 
 /****************************************************************************
@@ -427,7 +525,20 @@ static bool up_txempty(struct uart_dev_s *dev)
  ****************************************************************************/
 
 void riscv_earlyserialinit(void)
-{
+{  
+	/* Disable interrupts from all UARTS.  The console is enabled in
+	 * * litex_consoleinit().
+	 * */
+	
+	up_disable_irq(IBEX_IRQ_UART0_RX - IBEX_IRQ_ASYNC);	
+	up_disable_irq(IBEX_IRQ_UART0_TX - IBEX_IRQ_ASYNC);	
+ 
+       	/* Configuration whichever one is the console */
+
+#ifdef HAVE_SERIAL_CONSOLE
+	CONSOLE_DEV.isconsole = true;
+	up_setup(&CONSOLE_DEV);
+#endif
 }
 #endif
 
@@ -442,6 +553,15 @@ void riscv_earlyserialinit(void)
 
 void riscv_serialinit(void)
 {
+	/* Register the console */
+
+#ifdef HAVE_SERIAL_CONSOLE
+	uart_register("/dev/console", &CONSOLE_DEV);
+#endif
+
+	/* Register all UARTs */
+
+	uart_register("/dev/ttyS0", &TTYS0_DEV);
 }
 
 /****************************************************************************

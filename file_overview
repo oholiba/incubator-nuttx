@@ -20,9 +20,9 @@ arch:
 		irq.h: only declare listed interrupts and exceptions (in ibex docs); what to do with external interrupts?
 	src/
 		hardware/
-			ibex_clint.h: left litex; how does clint (core local interrupt) work?
+			!deleted: ibex_clint.h: left litex; how does clint (core local interrupt) work?
 			ibex_memorymap.h: modified uart_base; what to do with cputimer and timer base?
-			ibex_plic.h: left litex; probably necessary to remove csr definitions; how does plic (platform level interrupt controller) work?
+			!deleted: ibex_plic.h: left litex; probably necessary to remove csr definitions; how does plic (platform level interrupt controller) work?
 			ibex_uart.h: modified offsets, taken from example project
 		Kconfig: left litex; uart config ok like this?
 		Make.defs: left litex
@@ -31,7 +31,7 @@ arch:
 		ibex_allocateheap.c: left litex; why riscv_addregion empty?
 		ibex_clockconfig.c: left litex; are these two functions necessary (probably used by riscv code)?
 		ibex_clockconfig.h: see line above
-		ibex_config.h: left litex; probably useful to modify for only one single uart
+		ibex_config.h: deleted second uart
 		ibex_head.S: left litex; how does g_instackalloc and g_intstack work?
 		ibex_idle.c: left litex; does WFI work?
 		ibex_irq.c: what does colorize stack do?; enable and disable irq: only one command enough?; other functions: necessary?, what to do with up_irq_enable?

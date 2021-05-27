@@ -35,12 +35,13 @@
 #define IBEX_IRQ_MTIMER   (IBEX_IRQ_ASYNC + 7)  /* Machine Timer Int */
 #define IBEX_IRQ_MEXT     (IBEX_IRQ_ASYNC + 11) /* Machine External Int */
 
-/* Machine Global External Interrupt */
-#define IBEX_IRQ_UART0    (IBEX_IRQ_MEXT + 1)
-#define IBEX_IRQ_TIMER0   (IBEX_IRQ_MEXT + 2)
+#define IBEX_IRQ_FAST_LOCAL (IBEX_IRQ_ASYNC + 16)
+
+#define IBEX_IRQ_UART0_RX   (IBEX_IRQ_FAST_LOCAL + 0)
+#define IBEX_IRQ_UART0_TX   (IBEX_IRQ_FAST_LOCAL + 1)
 
 /* Total number of IRQs */
 
-#define NR_IRQS            (IBEX_IRQ_TIMER0 + 1)
+#define NR_IRQS            (IBEX_IRQ_UART0_TX + 1)
 
 #endif /* __ARCH_RISCV_INCLUDE_IBEX_IRQ_H */

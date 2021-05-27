@@ -27,8 +27,7 @@
 
 /* Register Base Address ****************************************************/
 
-#define IBEX_CPUTIMER_BASE 0xf0000800  /* riscv clint timer */
-#define IBEX_TIMER0_BASE   0xf0002800
+#define IBEX_TIMER0_BASE   0xFF000200
 #define IBEX_UART0_BASE    0xFF000000  /* 0xFF000000 - : UART0 */
 
 #endif /* __ARCH_RISCV_SRC_IBEX_HARDWARE_IBEX_MEMORYMAP_H */
